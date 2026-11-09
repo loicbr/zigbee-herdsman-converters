@@ -6,7 +6,7 @@ import * as legacy from "../lib/legacy";
 import * as m from "../lib/modernExtend";
 import * as reporting from "../lib/reporting";
 import * as tuya from "../lib/tuya";
-import type {DefinitionWithExtend, Fz, Tuya, Tz} from "../lib/types";
+import type {DefinitionWithExtend, Fz, KeyValue, Tuya, Tz} from "../lib/types";
 import * as utils from "../lib/utils";
 import * as zosung from "../lib/zosung";
 
@@ -391,6 +391,31 @@ const zc301Config: Tz.Converter = {
             if (value !== "ON" && value !== "OFF") throw new Error("Invalid charge_led_switch");
             await tuya.sendDataPointBool(entity, 155, value === "ON", "sendData", nextZc301Seq());
         }
+    },
+};
+
+// ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
+// [start_hi, start_lo, end_hi, end_lo, enabled]. Start and end delimit the window
+// during which the status LED stays lit, in minutes since 00:00; enabled is 1 when active.
+const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
+    from: (v: unknown) => {
+        const buf = moesMeterBytes(v);
+        if (buf.length < 5) return {};
+        return {
+            night_led: buf[4] === 1 ? "ON" : "OFF",
+            night_led_start: buf.readUInt16BE(0),
+            night_led_end: buf.readUInt16BE(2),
+        };
+    },
+    to: (_v: unknown, meta: Tz.Meta) => {
+        const values: KeyValue = {...meta.state, ...meta.message};
+        const start = utils.toNumber(values.night_led_start, "night_led_start");
+        const end = utils.toNumber(values.night_led_end, "night_led_end");
+        if (start < 0 || start > 1439 || end < 0 || end > 1439) {
+            throw new Error("night_led_start and night_led_end must be between 0 and 1439 (minutes since 00:00)");
+        }
+        const enabled = utils.getFromLookup(values.night_led, {ON: 1, OFF: 0});
+        return [(start >> 8) & 0xff, start & 0xff, (end >> 8) & 0xff, end & 0xff, enabled];
     },
 };
 
@@ -2308,6 +2333,17 @@ export const definitions: DefinitionWithExtend[] = [
             e
                 .enum("running_mode", ea.STATE, ["standby", "comfort", "comfort_1", "comfort_2", "eco", "antifrost"])
                 .withDescription("Current running mode"),
+            e.binary("night_led", ea.STATE_SET, "ON", "OFF").withDescription("Status LED enabled during the night window"),
+            e
+                .numeric("night_led_start", ea.STATE_SET)
+                .withValueMin(0)
+                .withValueMax(1439)
+                .withDescription("Night window start time for the status LED (minutes since 00:00)"),
+            e
+                .numeric("night_led_end", ea.STATE_SET)
+                .withValueMin(0)
+                .withValueMax(1439)
+                .withDescription("Night window end time for the status LED (minutes since 00:00)"),
         ],
         meta: {
             tuyaDatapoints: [
@@ -2404,6 +2440,10 @@ export const definitions: DefinitionWithExtend[] = [
                         antifrost: tuya.enum(5),
                     }),
                 ],
+                [114, null, zhtPt01NightLedConfig],
+                [114, "night_led", zhtPt01NightLedConfig],
+                [114, "night_led_start", zhtPt01NightLedConfig],
+                [114, "night_led_end", zhtPt01NightLedConfig],
             ],
         },
     },
