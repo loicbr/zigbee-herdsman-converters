@@ -9,6 +9,9 @@ import * as tuya from "../lib/tuya";
 import type {DefinitionWithExtend, Fz, KeyValue, Tuya, Tz} from "../lib/types";
 import * as utils from "../lib/utils";
 import * as zosung from "../lib/zosung";
+import {logger} from "../lib/logger";
+
+const NS = "zhc:moes";
 
 const e = exposes.presets;
 const ea = exposes.access;
@@ -399,6 +402,7 @@ const zc301Config: Tz.Converter = {
 // during which the status LED stays lit, in minutes since 00:00; enabled is 1 when active.
 const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
     from: (v: unknown) => {
+        logger.debug(`in zhtPt01NightLedConfig:from`, NS);
         const buf = moesMeterBytes(v);
         if (buf.length < 5) return {};
         return {
@@ -408,6 +412,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         };
     },
     to: (_v: unknown, meta: Tz.Meta) => {
+        logger.debug(`in zhtPt01NightLedConfig:to`, NS);
         const values: KeyValue = {...meta.state, ...meta.message};
         const start = utils.toNumber(values.night_led_start, "night_led_start");
         const end = utils.toNumber(values.night_led_end, "night_led_end");
