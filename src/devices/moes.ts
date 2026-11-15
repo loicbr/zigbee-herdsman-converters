@@ -3,13 +3,13 @@ import * as tz from "../converters/toZigbee";
 import type {ThermostatRunningState} from "../lib/constants";
 import * as exposes from "../lib/exposes";
 import * as legacy from "../lib/legacy";
+import {logger} from "../lib/logger";
 import * as m from "../lib/modernExtend";
 import * as reporting from "../lib/reporting";
 import * as tuya from "../lib/tuya";
 import type {DefinitionWithExtend, Fz, KeyValue, Tuya, Tz} from "../lib/types";
 import * as utils from "../lib/utils";
 import * as zosung from "../lib/zosung";
-import {logger} from "../lib/logger";
 
 const NS = "zhc:moes";
 
