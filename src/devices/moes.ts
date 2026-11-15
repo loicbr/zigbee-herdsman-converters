@@ -419,12 +419,14 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         logger.debug("in zhtPt01NightLedConfig:to", NS);
         const values: KeyValue = {...meta.state, ...meta.message};
         const start = utils.toNumber(values.night_led_start, "night_led_start");
+        logger.debug(`in zhtPt01NightLedConfig:to start= ${start}`, NS);
         const end = utils.toNumber(values.night_led_end, "night_led_end");
+        logger.debug(`in zhtPt01NightLedConfig:to end= ${end}`, NS);
         if (start < 0 || start > 1439 || end < 0 || end > 1439) {
             throw new Error("night_led_start and night_led_end must be between 0 and 1439 (minutes since 00:00)");
         }
         const enabled = utils.getFromLookup(values.night_led, {ON: 1, OFF: 0});
-        logger.debug(`in zhtPt01NightLedConfig:to ${enabled} / ${start} / ${end}`, NS);
+        logger.debug(`in zhtPt01NightLedConfig:to enabled=${enabled}`, NS);
         return [(start >> 8) & 0xff, start & 0xff, (end >> 8) & 0xff, end & 0xff, enabled];
     },
 };
