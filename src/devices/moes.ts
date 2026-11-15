@@ -402,17 +402,21 @@ const zc301Config: Tz.Converter = {
 // during which the status LED stays lit, in minutes since 00:00; enabled is 1 when active.
 const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
     from: (v: unknown) => {
-        logger.debug(`in zhtPt01NightLedConfig:from`, NS);
+        logger.debug("in zhtPt01NightLedConfig:from", NS);
         const buf = moesMeterBytes(v);
         if (buf.length < 5) return {};
+        const enabled = buf[4] === 1 ? "ON" : "OFF";
+        const start = buf.readUInt16BE(0);
+        const end = buf.readUInt16BE(2);
+        logger.debug(`zhtPt01NightLedConfig:from return ${enabled} / ${start} / ${end}`, NS);
         return {
-            night_led: buf[4] === 1 ? "ON" : "OFF",
-            night_led_start: buf.readUInt16BE(0),
-            night_led_end: buf.readUInt16BE(2),
+            night_led: status,
+            night_led_start: start,
+            night_led_end: end,
         };
     },
     to: (_v: unknown, meta: Tz.Meta) => {
-        logger.debug(`in zhtPt01NightLedConfig:to`, NS);
+        logger.debug("in zhtPt01NightLedConfig:to", NS);
         const values: KeyValue = {...meta.state, ...meta.message};
         const start = utils.toNumber(values.night_led_start, "night_led_start");
         const end = utils.toNumber(values.night_led_end, "night_led_end");
@@ -420,6 +424,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
             throw new Error("night_led_start and night_led_end must be between 0 and 1439 (minutes since 00:00)");
         }
         const enabled = utils.getFromLookup(values.night_led, {ON: 1, OFF: 0});
+        logger.debug(`in zhtPt01NightLedConfig:to ${enabled} / ${start} / ${end}`, NS);
         return [(start >> 8) & 0xff, start & 0xff, (end >> 8) & 0xff, end & 0xff, enabled];
     },
 };
