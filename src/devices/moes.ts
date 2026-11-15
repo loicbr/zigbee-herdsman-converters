@@ -410,7 +410,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         const end = buf.readUInt16BE(2);
         logger.debug(`zhtPt01NightLedConfig:from return ${enabled} / ${start} / ${end}`, NS);
         return {
-            night_led: status,
+            night_led: enabled,
             night_led_start: start,
             night_led_end: end,
         };
