@@ -419,7 +419,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         logger.debug("in zhtPt01NightLedConfig:to", NS);
         const values: KeyValue = {...meta.state, ...meta.message};
         const vs = values.toString();
-        logger.debug('in zhtPt01NightLedConfig:to values= ${vs}', NS);
+        logger.debug(`in zhtPt01NightLedConfig:to values= ${vs}`, NS);
         const start = utils.toNumber(values.night_led_start, "night_led_start");
         logger.debug(`in zhtPt01NightLedConfig:to start= ${start}`, NS);
         const end = utils.toNumber(values.night_led_end, "night_led_end");
