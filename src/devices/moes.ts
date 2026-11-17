@@ -421,6 +421,8 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         console.log(_v);
         logger.debug("in zhtPt01NightLedConfig:to values", NS);
         console.log(values);
+        logger.debug("in zhtPt01NightLedConfig:to meta", NS);
+        console.log(meta);
         const start = utils.toNumber(values.night_led_start, "night_led_start");
         logger.debug(`in zhtPt01NightLedConfig:to start= ${start}`, NS);
         const end = utils.toNumber(values.night_led_end, "night_led_end");
