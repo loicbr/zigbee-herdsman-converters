@@ -409,11 +409,11 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         const start = buf.readUInt16BE(0);
         const end = buf.readUInt16BE(2);
         logger.debug(`zhtPt01NightLedConfig:from return ${enabled} / ${start} / ${end}`, NS);
-        return {
-            night_led: enabled,
-            night_led_start: start,
-            night_led_end: end,
-        };
+        // return {
+        //     night_led: enabled,
+        //     night_led_start: start,
+        //     night_led_end: end,
+        // };
     },
     to: (_v: unknown, meta: Tz.Meta) => {
         const values: KeyValue = {...meta.state, ...meta.message};
@@ -2350,17 +2350,11 @@ export const definitions: DefinitionWithExtend[] = [
             e
                 .enum("running_mode", ea.STATE, ["standby", "comfort", "comfort_1", "comfort_2", "eco", "antifrost"])
                 .withDescription("Current running mode"),
-            e.binary("night_led", ea.STATE_SET, "ON", "OFF").withDescription("Status LED enabled during the night window"),
             e
-                .numeric("night_led_start", ea.STATE_SET)
-                .withValueMin(0)
-                .withValueMax(1439)
-                .withDescription("Night window start time for the status LED (minutes since 00:00)"),
-            e
-                .numeric("night_led_end", ea.STATE_SET)
-                .withValueMin(0)
-                .withValueMax(1439)
-                .withDescription("Night window end time for the status LED (minutes since 00:00)"),
+                .composite("night_led", "night_led", ea.SET)
+                .withFeature(e.binary("state", ea.STATE_SET, "ON", "OFF").withDescription("Status LED enabled during the night window"))
+                .withFeature(e.numeric("start", ea.SET).withValueMin(0).withValueMax(1439).withDescription("Night window start time for the status LED (minutes since 00:00)"))
+                .withFeature(e.numeric("end", ea.SET).withValueMin(0).withValueMax(1439).withDescription("Night window end time for the status LED (minutes since 00:00)")),
         ],
         meta: {
             tuyaDatapoints: [
@@ -2457,10 +2451,7 @@ export const definitions: DefinitionWithExtend[] = [
                         antifrost: tuya.enum(5),
                     }),
                 ],
-                [114, null, zhtPt01NightLedConfig],
                 [114, "night_led", zhtPt01NightLedConfig],
-                [114, "night_led_start", zhtPt01NightLedConfig],
-                [114, "night_led_end", zhtPt01NightLedConfig],
             ],
         },
     },
