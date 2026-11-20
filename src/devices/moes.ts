@@ -2356,14 +2356,14 @@ export const definitions: DefinitionWithExtend[] = [
                         .numeric("start", ea.SET)
                         .withValueMin(0)
                         .withValueMax(1439)
-                        .withDescription("Night window start time for the status LED (minutes since 00:00)")
+                        .withDescription("Night window start time for the status LED (minutes since 00:00)"),
                 )
                 .withFeature(
                     e
                         .numeric("end", ea.SET)
                         .withValueMin(0)
                         .withValueMax(1439)
-                        .withDescription("Night window end time for the status LED (minutes since 00:00)")
+                        .withDescription("Night window end time for the status LED (minutes since 00:00)"),
                 ),
         ],
         meta: {
