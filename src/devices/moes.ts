@@ -415,7 +415,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         //     night_led_end: end,
         // };
     },
-    to: (_v: unknown, meta: Tz.Meta) => {
+    to: (_v: KeyValue, meta: Tz.Meta) => {
         const values: KeyValue = {...meta.state, ...meta.message};
         logger.debug("in zhtPt01NightLedConfig:to _v", NS);
         console.log(_v);
@@ -2351,8 +2351,20 @@ export const definitions: DefinitionWithExtend[] = [
             e
                 .composite("night_led", "night_led", ea.SET)
                 .withFeature(e.binary("state", ea.STATE_SET, "ON", "OFF").withDescription("Status LED enabled during the night window"))
-                .withFeature(e.numeric("start", ea.SET).withValueMin(0).withValueMax(1439).withDescription("Night window start time for the status LED (minutes since 00:00)"))
-                .withFeature(e.numeric("end", ea.SET).withValueMin(0).withValueMax(1439).withDescription("Night window end time for the status LED (minutes since 00:00)")),
+                .withFeature(
+                    e
+                        .numeric("start", ea.SET)
+                        .withValueMin(0)
+                        .withValueMax(1439)
+                        .withDescription("Night window start time for the status LED (minutes since 00:00)")
+                )
+                .withFeature(
+                    e
+                        .numeric("end", ea.SET)
+                        .withValueMin(0)
+                        .withValueMax(1439)
+                        .withDescription("Night window end time for the status LED (minutes since 00:00)")
+                ),
         ],
         meta: {
             tuyaDatapoints: [
