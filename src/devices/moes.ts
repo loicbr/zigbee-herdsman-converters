@@ -424,7 +424,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         // logger.debug("in zhtPt01NightLedConfig:to meta", NS);
         // console.log(meta);
         logger.debug(`in zhtPt01NightLedConfig:to start= ${_v.start}`, NS);
-        logger.debug(`in zhtPt01NightLedConfig:to end= ${end}`, NS);
+        logger.debug(`in zhtPt01NightLedConfig:to end= ${_v.end}`, NS);
         if (_v.start < 0 || _v.start > 1439 || _v.end < 0 || _v.end > 1439) {
             throw new Error("night_led_start and night_led_end must be between 0 and 1439 (minutes since 00:00)");
         }
