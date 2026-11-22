@@ -423,14 +423,16 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         // console.log(values);
         // logger.debug("in zhtPt01NightLedConfig:to meta", NS);
         // console.log(meta);
-        logger.debug(`in zhtPt01NightLedConfig:to start= ${_v.start}`, NS);
-        logger.debug(`in zhtPt01NightLedConfig:to end= ${_v.end}`, NS);
-        if (_v.start < 0 || _v.start > 1439 || _v.end < 0 || _v.end > 1439) {
+        const start = Number(_v.start.hour) * 60 + Number(_v.start.minute);
+        const end = Number(_v.end.hour) * 60 + Number(_v.end.minute);
+        logger.debug(`in zhtPt01NightLedConfig:to start= ${start}`, NS);
+        logger.debug(`in zhtPt01NightLedConfig:to end= ${end}`, NS);
+        if (start < 0 || start > 1439 || end < 0 || end > 1439) {
             throw new Error("night_led_start and night_led_end must be between 0 and 1439 (minutes since 00:00)");
         }
         const enabled = utils.getFromLookup(_v.state, {ON: 1, OFF: 0});
         logger.debug(`in zhtPt01NightLedConfig:to enabled=${enabled}`, NS);
-        return [(_v.start >> 8) & 0xff, _v.start & 0xff, (_v.end >> 8) & 0xff, _v.end & 0xff, enabled];
+        return [start >> 8 & 0xff, start & 0xff, end >> 8 & 0xff, end & 0xff, enabled];
     },
 };
 
@@ -2353,17 +2355,17 @@ export const definitions: DefinitionWithExtend[] = [
                 .withFeature(e.binary("state", ea.STATE_SET, "ON", "OFF").withDescription("Status LED enabled during the night window"))
                 .withFeature(
                     e
-                        .numeric("start", ea.SET)
-                        .withValueMin(0)
-                        .withValueMax(1439)
-                        .withDescription("Night window start time for the status LED (minutes since 00:00)"),
+                        .composite("start", "start", ea.SET)
+                        .withFeature(e.numeric('hour', ea.STATE_SET).withUnit("h").withValueMin(0).withValueMax(23))
+                        .withFeature(e.numeric('minute', ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
+                        .withDescription("Night window start time for the status LED"),
                 )
                 .withFeature(
                     e
-                        .numeric("end", ea.SET)
-                        .withValueMin(0)
-                        .withValueMax(1439)
-                        .withDescription("Night window end time for the status LED (minutes since 00:00)"),
+                        .composite("end", "end", ea.SET)
+                        .withFeature(e.numeric('hour', ea.STATE_SET).withUnit("h").withValueMin(0).withValueMax(23))
+                        .withFeature(e.numeric('minute', ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
+                        .withDescription("Night window end time for the status LED"),
                 ),
         ],
         meta: {
