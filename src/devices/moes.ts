@@ -397,6 +397,12 @@ const zc301Config: Tz.Converter = {
     },
 };
 
+function Minutes2HoursMinutes(totalMinutes: number): { hour: number; minute: number } {
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  return { hour, minute };
+}
+
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
 // [start_hi, start_lo, end_hi, end_lo, enabled]. Start and end delimit the window
 // during which the status LED stays lit, in minutes since 00:00; enabled is 1 when active.
@@ -406,14 +412,14 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         const buf = moesMeterBytes(v);
         if (buf.length < 5) return {};
         const enabled = buf[4] === 1 ? "ON" : "OFF";
-        const start = buf.readUInt16BE(0);
-        const end = buf.readUInt16BE(2);
+        const start = Minutes2HoursMinutes(buf.readUInt16BE(0));
+        const end = Minutes2HoursMinutes(buf.readUInt16BE(2));
         logger.debug(`zhtPt01NightLedConfig:from return ${enabled} / ${start} / ${end}`, NS);
-        // return {
-        //     night_led: enabled,
-        //     night_led_start: start,
-        //     night_led_end: end,
-        // };
+        return {
+            state: enabled,
+            start: start,
+            end: end,
+        };
     },
     to: (_v, meta: Tz.Meta) => {
         // const values: KeyValue = {...meta.state, ...meta.message};
