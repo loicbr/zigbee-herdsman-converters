@@ -403,6 +403,17 @@ function Minutes2HoursMinutes(totalMinutes: number): { hour: number; minute: num
   return { hour, minute };
 }
 
+const zhtPt01Schedule: Tuya.ValueConverterSingle = {
+    from: (v) => {
+        logger.debug("in zhtPt01Schedule:from", NS);
+        console.log(v);
+    },
+    to: (v: String) => {
+        // const values: KeyValue = {...meta.state, ...meta.message};
+        logger.debug("in zhtPt01Schedule:to _v", NS);
+        console.log(_v);
+    },
+};
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
 // [start_hi, start_lo, end_hi, end_lo, enabled]. Start and end delimit the window
 // during which the status LED stays lit, in minutes since 00:00; enabled is 1 when active.
@@ -2373,6 +2384,13 @@ export const definitions: DefinitionWithExtend[] = [
                         .withFeature(e.numeric('minute', ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
                         .withDescription("Night window end time for the status LED"),
                 ),
+            e.text("monday_schedule", ea.STATE_SET),
+            e.text("tuesday_schedule", ea.STATE_SET)
+            e.text("wednesday_schedule", ea.STATE_SET)
+            e.text("thursday_schedule", ea.STATE_SET)
+            e.text("friday_schedule", ea.STATE_SET)
+            e.text("saturday_schedule", ea.STATE_SET)
+            e.text("sunday_schedule", ea.STATE_SET)
         ],
         meta: {
             tuyaDatapoints: [
@@ -2438,13 +2456,13 @@ export const definitions: DefinitionWithExtend[] = [
                     }),
                 ],
                 [50, "current_heating_setpoint", tuya.valueConverter.divideBy10],
-                [65, "week_program_1", tuya.valueConverter.raw],
-                [66, "week_program_2", tuya.valueConverter.raw],
-                [67, "week_program_3", tuya.valueConverter.raw],
-                [68, "week_program_4", tuya.valueConverter.raw],
-                [69, "week_program_5", tuya.valueConverter.raw],
-                [70, "week_program_6", tuya.valueConverter.raw],
-                [71, "week_program_7", tuya.valueConverter.raw],
+                [65, "monday_schedule", zhtPt01Schedule],
+                [66, "tuesday_schedule", zhtPt01Schedule],
+                [67, "wednesday_schedule", zhtPt01Schedule],
+                [68, "thursday_schedule", zhtPt01Schedule],
+                [69, "friday_schedule", zhtPt01Schedule],
+                [70, "saturday_schedule", zhtPt01Schedule],
+                [71, "sunday_schedule", zhtPt01Schedule],
                 [101, "vacation_duration", tuya.valueConverter.raw],
                 [102, "boost_duration", tuya.valueConverter.raw],
                 [103, "electricity_statistics", tuya.valueConverter.divideBy10],
