@@ -412,7 +412,7 @@ const zhtPt01Schedule: Tuya.ValueConverterSingle = {
     to: (v: String) => {
         // const values: KeyValue = {...meta.state, ...meta.message};
         logger.debug("in zhtPt01Schedule:to v", NS);
-        const dict: Record<string, any> = JSON.parse(jsonString);
+        const dict: Record<string, any> = JSON.parse(v);
         console.log(dict);
     },
 };
