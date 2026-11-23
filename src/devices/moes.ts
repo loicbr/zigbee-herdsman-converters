@@ -2385,12 +2385,12 @@ export const definitions: DefinitionWithExtend[] = [
                         .withDescription("Night window end time for the status LED"),
                 ),
             e.text("monday_schedule", ea.STATE_SET),
-            e.text("tuesday_schedule", ea.STATE_SET)
-            e.text("wednesday_schedule", ea.STATE_SET)
-            e.text("thursday_schedule", ea.STATE_SET)
-            e.text("friday_schedule", ea.STATE_SET)
-            e.text("saturday_schedule", ea.STATE_SET)
-            e.text("sunday_schedule", ea.STATE_SET)
+            e.text("tuesday_schedule", ea.STATE_SET),
+            e.text("wednesday_schedule", ea.STATE_SET),
+            e.text("thursday_schedule", ea.STATE_SET),
+            e.text("friday_schedule", ea.STATE_SET),
+            e.text("saturday_schedule", ea.STATE_SET),
+            e.text("sunday_schedule", ea.STATE_SET),
         ],
         meta: {
             tuyaDatapoints: [
