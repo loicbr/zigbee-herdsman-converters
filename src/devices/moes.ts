@@ -404,7 +404,7 @@ function Minutes2HoursMinutes(totalMinutes: number): { hour: number; minute: num
 }
 
 const zhtPt01Schedule: Tuya.ValueConverterSingle = {
-    from: (v): String => {
+    from: (v): string => {
         logger.debug("in zhtPt01Schedule:from", NS);
         console.log(v);
         return ""
