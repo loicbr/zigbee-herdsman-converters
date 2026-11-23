@@ -404,14 +404,15 @@ function Minutes2HoursMinutes(totalMinutes: number): { hour: number; minute: num
 }
 
 const zhtPt01Schedule: Tuya.ValueConverterSingle = {
-    from: (v) => {
+    from: (v): String => {
         logger.debug("in zhtPt01Schedule:from", NS);
         console.log(v);
+        return ""
     },
     to: (v: String) => {
         // const values: KeyValue = {...meta.state, ...meta.message};
         logger.debug("in zhtPt01Schedule:to _v", NS);
-        console.log(_v);
+        console.log(v);
     },
 };
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
