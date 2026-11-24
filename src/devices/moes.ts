@@ -60,6 +60,21 @@ const fzLocal = {
     } satisfies Fz.Converter<"closuresWindowCovering", tuya.TuyaClosuresWindowCovering, ["attributeReport", "readResponse"]>,
 };
 
+type HeaterMode = "eco" | "comfort" | "comfort_1" | "comfort_2" | "antifrost";
+
+const MODE_VALUES: Record<HeaterMode, number> = {
+  comfort: 1,
+  comfort_1: 2,
+  comfort_2: 3,
+  eco: 4,
+  antifrost: 5,
+};
+
+interface Schedule {
+  halfHours: number[]; // 48 values, one per ½ hour
+  hours: number[];     // 24 packed values: (firstHalf << 4) + secondHalf
+}
+
 type MoesAlarmThreshold = {id: number; min: number; max: number};
 const moesAlarmThresholds: Record<string, MoesAlarmThreshold> = {
     over_current_threshold: {id: 1, min: 1, max: 63},
@@ -403,6 +418,49 @@ function Minutes2HoursMinutes(totalMinutes: number): {hour: number; minute: numb
     return {hour, minute};
 }
 
+function zhtPt01buildSchedule(scheduleJson: string): Schedule {
+  // 1. Parse the JSON const into change points, in JSON key order (no sorting)
+  const changes = (Object.entries(JSON.parse(scheduleJson)) as [string, string][])
+    .map(([time, mode]) => {
+      const match = /^(\d{1,2}):(\d{2})$/.exec(time);
+      if (!match) throw new Error(`Invalid time format: "${time}"`);
+      const h = Number(match[1]);
+      const m = Number(match[2]);
+      if (h > 23 || m > 59) throw new Error(`Time out of range: "${time}"`);
+      if (!(mode in MODE_VALUES)) throw new Error(`Unknown mode: "${mode}"`);
+      return { time, index: h * 2 + (m >= 30 ? 1 : 0), value: MODE_VALUES[mode] };
+    });
+
+  // 2. Validate chronological order (each key strictly later than the previous)
+  for (let k = 1; k < changes.length; k++) {
+    if (changes[k].index <= changes[k - 1].index) {
+      throw new Error(
+        `Invalid key order: "${changes[k].time}" must come after "${changes[k - 1].time}"`
+      );
+    }
+  }
+
+  // 3. Fill 48 slots with eco, then paint each mode from its key to the next key
+  const halfHours: number[] = new Array(48).fill(MODE_VALUES.eco);
+  for (let k = 0; k < changes.length; k++) {
+    const end = k + 1 < changes.length ? changes[k + 1].index : 48;
+    halfHours.fill(changes[k].value, changes[k].index, end);
+  }
+
+  // 4. Wrap around 24:00 — the last mode continues from midnight until the first key
+  if (changes.length > 0 && changes[0].index > 0) {
+    halfHours.fill(changes[changes.length - 1].value, 0, changes[0].index);
+  }
+
+  // 5. Pack each pair of half-hours into one value per hour
+  const hours: number[] = [];
+  for (let h = 0; h < 24; h++) {
+    hours.push((halfHours[2 * h] << 4) + halfHours[2 * h + 1]);
+  }
+
+  return { halfHours, hours };
+}
+
 const zhtPt01Schedule: Tuya.ValueConverterSingle = {
     from: (v): string => {
         logger.debug("in zhtPt01Schedule:from", NS);
@@ -412,11 +470,10 @@ const zhtPt01Schedule: Tuya.ValueConverterSingle = {
     to: (v: string) => {
         // const values: KeyValue = {...meta.state, ...meta.message};
         logger.debug("in zhtPt01Schedule:to v", NS);
-        const dict: Record<string, string> = JSON.parse(v);
-        console.log(dict);
-        for (const [key, value] of Object.entries(JSON.parse(v))) {
-            console.log(key, value);
-        };
+        const { halfHours, hours } = zhtPt01buildSchedule(SCHEDULE);
+
+        console.log(v);
+        console.log(hours);
     },
 };
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
