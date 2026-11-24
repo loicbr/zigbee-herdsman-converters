@@ -422,6 +422,8 @@ function zhtPt01buildSchedule(scheduleJson: string): Schedule {
   // 1. Parse the JSON const into change points, in JSON key order (no sorting)
   const changes = (Object.entries(JSON.parse(scheduleJson)) as [string, string][])
     .map(([time, mode]) => {
+      console.log(time)
+      console.log(mode)
       const match = /^(\d{1,2}):(\d{2})$/.exec(time);
       if (!match) throw new Error(`Invalid time format: "${time}"`);
       const h = Number(match[1]);
