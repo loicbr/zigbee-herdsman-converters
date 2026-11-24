@@ -70,6 +70,10 @@ const MODE_VALUES: Record<HeaterMode, number> = {
   antifrost: 5,
 };
 
+function isHeaterMode(value: string): value is HeaterMode {
+  return value in MODE_VALUES;
+}
+
 interface Schedule {
   halfHours: number[]; // 48 values, one per ½ hour
   hours: number[];     // 24 packed values: (firstHalf << 4) + secondHalf
@@ -429,7 +433,7 @@ function zhtPt01buildSchedule(scheduleJson: string): Schedule {
       const h = Number(match[1]);
       const m = Number(match[2]);
       if (h > 23 || m > 59) throw new Error(`Time out of range: "${time}"`);
-      if (!(mode in MODE_VALUES)) throw new Error(`Unknown mode: "${mode}"`);
+      if (!isHeaterMode(mode)) throw new Error(`Unknown mode: "${mode}"`);
       return { time, index: h * 2 + (m >= 30 ? 1 : 0), value: MODE_VALUES[mode] };
     });
 
