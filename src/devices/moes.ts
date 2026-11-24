@@ -397,23 +397,26 @@ const zc301Config: Tz.Converter = {
     },
 };
 
-function Minutes2HoursMinutes(totalMinutes: number): { hour: number; minute: number } {
-  const hour = Math.floor(totalMinutes / 60);
-  const minute = totalMinutes % 60;
-  return { hour, minute };
+function Minutes2HoursMinutes(totalMinutes: number): {hour: number; minute: number} {
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = totalMinutes % 60;
+    return {hour, minute};
 }
 
 const zhtPt01Schedule: Tuya.ValueConverterSingle = {
     from: (v): string => {
         logger.debug("in zhtPt01Schedule:from", NS);
         console.log(v);
-        return ""
+        return "";
     },
     to: (v: string) => {
         // const values: KeyValue = {...meta.state, ...meta.message};
         logger.debug("in zhtPt01Schedule:to v", NS);
         const dict: Record<string, string> = JSON.parse(v);
         console.log(dict);
+        for (const [key, value] of Object.entries(JSON.parse(v))) {
+            console.log(key, value);
+        };
     },
 };
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
@@ -451,7 +454,7 @@ const zhtPt01NightLedConfig: Tuya.ValueConverterSingle = {
         }
         const enabled = utils.getFromLookup(_v.state, {ON: 1, OFF: 0});
         logger.debug(`in zhtPt01NightLedConfig:to enabled=${enabled}`, NS);
-        return [start >> 8 & 0xff, start & 0xff, end >> 8 & 0xff, end & 0xff, enabled];
+        return [(start >> 8) & 0xff, start & 0xff, (end >> 8) & 0xff, end & 0xff, enabled];
     },
 };
 
@@ -2375,15 +2378,15 @@ export const definitions: DefinitionWithExtend[] = [
                 .withFeature(
                     e
                         .composite("start", "start", ea.SET)
-                        .withFeature(e.numeric('hour', ea.STATE_SET).withUnit("h").withValueMin(0).withValueMax(23))
-                        .withFeature(e.numeric('minute', ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
+                        .withFeature(e.numeric("hour", ea.STATE_SET).withUnit("h").withValueMin(0).withValueMax(23))
+                        .withFeature(e.numeric("minute", ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
                         .withDescription("Night window start time for the status LED"),
                 )
                 .withFeature(
                     e
                         .composite("end", "end", ea.SET)
-                        .withFeature(e.numeric('hour', ea.STATE_SET).withUnit("h").withValueMin(0).withValueMax(23))
-                        .withFeature(e.numeric('minute', ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
+                        .withFeature(e.numeric("hour", ea.STATE_SET).withUnit("h").withValueMin(0).withValueMax(23))
+                        .withFeature(e.numeric("minute", ea.STATE_SET).withUnit("min").withValueMin(0).withValueMax(59))
                         .withDescription("Night window end time for the status LED"),
                 ),
             e.text("monday_schedule", ea.STATE_SET),
