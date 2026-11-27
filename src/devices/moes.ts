@@ -7,7 +7,7 @@ import {logger} from "../lib/logger";
 import * as m from "../lib/modernExtend";
 import * as reporting from "../lib/reporting";
 import * as tuya from "../lib/tuya";
-import type {DefinitionWithExtend, Fz, KeyValue, Tuya, Tz} from "../lib/types";
+import type {DefinitionWithExtend, Fz, Tuya, Tz} from "../lib/types";
 import * as utils from "../lib/utils";
 import * as zosung from "../lib/zosung";
 
@@ -72,11 +72,6 @@ const MODE_VALUES: Record<HeaterMode, number> = {
 
 function isHeaterMode(value: string): value is HeaterMode {
     return value in MODE_VALUES;
-}
-
-interface Schedule {
-    halfHours: number[]; // 48 values, one per ½ hour
-    hours: number[]; // 24 packed values: (firstHalf << 4) + secondHalf
 }
 
 type MoesAlarmThreshold = {id: number; min: number; max: number};
@@ -422,61 +417,52 @@ function Minutes2HoursMinutes(totalMinutes: number): {hour: number; minute: numb
     return {hour, minute};
 }
 
-function zhtPt01buildSchedule(scheduleJson: string): Schedule {
-    // 1. Parse the JSON const into change points, in JSON key order (no sorting)
-    const changes = (Object.entries(JSON.parse(scheduleJson)) as [string, string][]).map(([time, mode]) => {
-        console.log(time);
-        console.log(mode);
-        const match = /^(\d{1,2}):(\d{2})$/.exec(time);
-        if (!match) throw new Error(`Invalid time format: "${time}"`);
-        const h = Number(match[1]);
-        const m = Number(match[2]);
-        if (h > 23 || m > 59) throw new Error(`Time out of range: "${time}"`);
-        if (!isHeaterMode(mode)) throw new Error(`Unknown mode: "${mode}"`);
-        return {time, index: h * 2 + (m >= 30 ? 1 : 0), value: MODE_VALUES[mode]};
-    });
-
-    // 2. Validate chronological order (each key strictly later than the previous)
-    for (let k = 1; k < changes.length; k++) {
-        if (changes[k].index <= changes[k - 1].index) {
-            throw new Error(`Invalid key order: "${changes[k].time}" must come after "${changes[k - 1].time}"`);
-        }
-    }
-
-    // 3. Fill 48 slots with eco, then paint each mode from its key to the next key
-    const halfHours: number[] = new Array(48).fill(MODE_VALUES.eco);
-    for (let k = 0; k < changes.length; k++) {
-        const end = k + 1 < changes.length ? changes[k + 1].index : 48;
-        halfHours.fill(changes[k].value, changes[k].index, end);
-    }
-
-    // 4. Wrap around 24:00 — the last mode continues from midnight until the first key
-    if (changes.length > 0 && changes[0].index > 0) {
-        halfHours.fill(changes[changes.length - 1].value, 0, changes[0].index);
-    }
-
-    // 5. Pack each pair of half-hours into one value per hour
-    const hours: number[] = [];
-    for (let h = 0; h < 24; h++) {
-        hours.push((halfHours[2 * h] << 4) + halfHours[2 * h + 1]);
-    }
-
-    return {halfHours, hours};
-}
-
 const zhtPt01Schedule: Tuya.ValueConverterSingle = {
     from: (v): string => {
         logger.debug("in zhtPt01Schedule:from", NS);
         console.log(v);
         return "";
     },
-    to: (v: string) => {
-        // const values: KeyValue = {...meta.state, ...meta.message};
-        logger.debug("in zhtPt01Schedule:to v", NS);
-        const {halfHours, hours} = zhtPt01buildSchedule(v);
+    to: (scheduleJson: string): Uint8Array => {
+        // 1. Parse the JSON const into change points, in JSON key order (no sorting)
+        const changes = (Object.entries(JSON.parse(scheduleJson)) as [string, string][]).map(([time, mode]) => {
+            console.log(time);
+            console.log(mode);
+            const match = /^(\d{1,2}):(\d{2})$/.exec(time);
+            if (!match) throw new Error(`Invalid time format: "${time}"`);
+            const h = Number(match[1]);
+            const m = Number(match[2]);
+            if (h > 23 || m > 59) throw new Error(`Time out of range: "${time}"`);
+            if (!isHeaterMode(mode)) throw new Error(`Unknown mode: "${mode}"`);
+            return {time, index: h * 2 + (m >= 30 ? 1 : 0), value: MODE_VALUES[mode]};
+        });
 
-        console.log(v);
-        console.log(hours);
+        // 2. Validate chronological order (each key strictly later than the previous)
+        for (let k = 1; k < changes.length; k++) {
+            if (changes[k].index <= changes[k - 1].index) {
+                throw new Error(`Invalid key order: "${changes[k].time}" must come after "${changes[k - 1].time}"`);
+            }
+        }
+
+        // 3. Fill 48 slots with eco, then paint each mode from its key to the next key
+        const halfHours: number[] = new Array(48).fill(MODE_VALUES.eco);
+        for (let k = 0; k < changes.length; k++) {
+            const end = k + 1 < changes.length ? changes[k + 1].index : 48;
+            halfHours.fill(changes[k].value, changes[k].index, end);
+        }
+
+        // 4. Wrap around 24:00 — the last mode continues from midnight until the first key
+        if (changes.length > 0 && changes[0].index > 0) {
+            halfHours.fill(changes[changes.length - 1].value, 0, changes[0].index);
+        }
+
+        // 5. Pack each pair of half-hours into one value per hour
+        const hours: number[] = [];
+        for (let h = 0; h < 24; h++) {
+            hours.push((halfHours[2 * h] << 4) + halfHours[2 * h + 1]);
+        }
+
+        return new Uint8Array(hours);
     },
 };
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
