@@ -423,7 +423,7 @@ const zhtPt01Schedule: Tuya.ValueConverterSingle = {
         console.log(v);
         return "";
     },
-    to: (scheduleJson: string): Uint8Array => {
+    to: (scheduleJson: string): number[] => {
         // 1. Parse the JSON const into change points, in JSON key order (no sorting)
         const changes = (Object.entries(JSON.parse(scheduleJson)) as [string, string][]).map(([time, mode]) => {
             console.log(time);
@@ -462,7 +462,7 @@ const zhtPt01Schedule: Tuya.ValueConverterSingle = {
             hours.push((halfHours[2 * h] << 4) + halfHours[2 * h + 1]);
         }
 
-        return new Uint8Array(hours);
+        return hours;
     },
 };
 // ZHT-PT01-M-MS DP 114 (nightLEDConfig): 5 raw bytes
